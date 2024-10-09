@@ -1,19 +1,30 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <algorithm>
 #include <iterator>
-#include <string>
+#include <algorithm>
 #include <limits>
 
-// Функция для ввода целых чисел в вектор
+// Функция для ввода целых чисел с проверкой на корректность
 void inputNumbers(std::vector<int>& numbers) {
-    int number;
     std::cout << "Введите целые числа (введите 'q' для завершения ввода):" << std::endl;
-    while (std::cin >> number) {
-        numbers.push_back(number);
+    int number;
+    while (true) {
+        std::cout << "> ";
+        if (std::cin >> number) {
+            numbers.push_back(number);
+        } else {
+            std::string input;
+            std::cin.clear(); // Сброс состояния потока
+            std::cin >> input; // Чтение некорректного ввода
+            if (input == "q") {
+                break; // Завершение ввода
+            } else {
+                std::cout << "Некорректный ввод, попробуйте снова." << std::endl;
+            }
+        }
     }
-    std::cin.clear(); // Сброс состояния потока ввода
+    std::cin.clear(); // Сброс состояния потока
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Игнорирование оставшегося ввода
 }
 
@@ -25,7 +36,7 @@ void writeToFile(const std::string& name, const std::vector<int>& numbers) {
         return;
     }
 
-    // Использование std::replace_copy для замены 0 на 10
+    // Использование replace_copy для замены 0 на 10
     std::transform(numbers.begin(), numbers.end(), std::ostream_iterator<int>(outFile, "  "), 
                    [](int n) { return n == 0 ? 10 : n; });
 
