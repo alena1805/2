@@ -1,194 +1,186 @@
 #include <iostream>
+#include <stdexcept>
 #include <string>
-#include <vector>
-#include <sstream>
-
-// Класс для представления имени
-class Name {
-public:
-    std::string surname;      // Фамилия
-    std::string first_name;   // Имя
-    std::string patronymic;   // Отчество
-
-    // Конструктор для создания имени только с именем
-    Name(const std::string& first_name) : first_name(first_name) {}
-
-    // Конструктор для создания имени с именем и фамилией
-    Name(const std::string& first_name, const std::string& surname) 
-        : first_name(first_name), surname(surname) {}
-
-    // Конструктор для создания полного имени с фамилией, именем и отчеством
-    Name(const std::string& surname, const std::string& first_name, const std::string& patronymic) 
-        : surname(surname), first_name(first_name), patronymic(patronymic) {}
-
-    // Метод для получения строкового представления имени
-    std::string toString() const {
-        std::ostringstream oss; // Используем строковый поток для формирования строки
-        if (!surname.empty()) oss << surname << " "; // Добавляем фамилию, если она не пустая
-        if (!first_name.empty()) oss << first_name;   // Добавляем имя, если оно не пустое
-        if (!patronymic.empty()) oss << " " << patronymic; // Добавляем отчество, если оно не пустое
-        return oss.str(); // Возвращаем сформированную строку
-    }
-};
 
 // Класс для представления дома
 class House {
+private:
+    int floors; // Количество этажей в доме
 public:
-    int floors;  // Количество этажей в доме
+    // Конструктор класса House с параметром по умолчанию
+    House(int floors = 0) : floors(floors) {}
 
-    // Конструктор для создания дома с заданным количеством этажей
-    House(int floors) : floors(floors) {}
-
-    // Метод для получения строкового представления дома с учетом правил русского языка
+    // Метод для получения строкового представления дома
     std::string toString() const {
-        // Формируем строку в зависимости от количества этажей
-        if (floors % 10 == 1 && floors % 100 != 11) {
-            return "дом с " + std::to_string(floors) + " этажом"; // 1 этаж
-        } else if (2 <= floors % 10 && floors % 10 <= 4 && !(12 <= floors % 100 && floors % 100 <= 14)) {
-            return "дом с " + std::to_string(floors) + " этажами"; // 2-4 этажа
+        std::string ending; // Переменная для окончания слова "этаж"
+        int lastDigit = floors % 10; // Последняя цифра количества этажей
+        int lastTwoDigits = floors % 100; // Последние две цифры количества этажей
+
+        // Определяем правильное окончание в зависимости от количества этажей
+        if (lastDigit == 1 && lastTwoDigits != 11) {
+            ending = "этаж"; // Один этаж
+        } else if ((lastDigit >= 2 && lastDigit <= 4) && (lastTwoDigits < 12 || lastTwoDigits > 14)) {
+            ending = "этажа"; // Два, три или четыре этажа
         } else {
-            return "дом с " + std::to_string(floors) + " этажами"; // 5 и более этажей
+            ending = "этажей"; // Пять и более этажей
         }
+        return "Дом с " + std::to_string(floors) + " " + ending; // Возвращаем строку с информацией о доме
     }
 };
 
-// Класс для представления отдела
-class Department {
-public:
-    std::string name;      // Название отдела
-    std::string chief;     // Начальник отдела
-    std::vector<std::string> employees;  // Список сотрудников отдела
-
-    // Конструктор для создания отдела с названием и начальником
-    Department(const std::string& name, const std::string& chief)
-        : name(name), chief(chief) {}
-
-    // Метод для добавления сотрудника в отдел
-    void addEmployee(const std::string& employeeName) {
-        employees.push_back(employeeName); // Добавляем имя сотрудника в вектор сотрудников
-    }
-
-    // Метод для вывода списка сотрудников отдела
-    void listEmployees() const {
-        std::cout << "Сотрудники отдела " << name << ":n"; // Выводим заголовок списка сотрудников
-        for (const auto& emp : employees) { // Проходим по всем сотрудникам
-            std::cout << "- " << emp << "n"; // Выводим имя каждого сотрудника
-        }
-    }
-};
-
-// Класс для представления сотрудника
-class Employee {
-public:
-    Name name;             // Имя сотрудника (объект класса Name)
-    Department* department; // Указатель на отдел, в котором работает сотрудник
-
-    // Конструктор для создания сотрудника с именем и указателем на отдел
-    Employee(const Name& name, Department* department)
-        : name(name), department(department) {
-        department->addEmployee(name.toString()); // Добавляем сотрудника в отдел при создании
-    }
-
-    // Метод для получения строкового представления сотрудника
-    std::string toString() const {
-        // Проверяем, является ли сотрудник начальником отдела и формируем соответствующую строку
-        if (department->chief == name.toString()) {
-            return name.toString() + " начальник отдела " + department->name; // Начальник отдела
-        } else {            return name.toString() + " работает в отделе " + department->name +
-                   ", начальник которого " + department->chief; // Обычный сотрудник
-        }
-    }
-};
-
-// Класс для представления дроби
+// Класс для представления дробей
 class Fraction {
+private:
+    int numerator;   // Числитель
+    int denominator; // Знаменатель
+
+    // Метод для упрощения дроби
+    void simplify() {
+        int gcd = this->gcd(numerator, denominator); // Находим НОД
+        numerator /= gcd;                           // Делим числитель на НОД
+        denominator /= gcd;                         // Делим знаменатель на НОД
+        if (denominator < 0) {                      // Если знаменатель отрицательный
+            numerator = -numerator;                 // Меняем знак числителя и знаменателя
+            denominator = -denominator;
+        }
+    }
+
+    // Метод для нахождения НОД (наибольший общий делитель)
+    int gcd(int a, int b) const {
+        return b == 0 ? a : gcd(b, a % b); // Рекурсивный алгоритм Евклида
+    }
 public:
-    int numerator;   // Числитель дроби
-    int denominator; // Знаменатель дроби
-
-    // Конструктор для создания дроби с числителем и знаменателем
-    Fraction(int numerator, int denominator) : numerator(numerator), denominator(denominator) {}
-
-    // Метод для получения строкового представления дроби
-    std::string toString() const {
-        return std::to_string(numerator) + "/" + std::to_string(denominator); // Формируем строку вида "числитель/знаменатель"
+    // Конструктор класса Fraction
+    Fraction(int num, int denom) : numerator(num), denominator(denom) {
+        if (denominator == 0) { // Проверка на деление на ноль
+            throw std::invalid_argument("Знаменатель не может быть равен нулю");
+        }
+        simplify(); // Упрощаем дробь сразу после создания
     }
 
     // Метод для сложения дробей
     Fraction sum(const Fraction& other) const {
-        return Fraction(numerator * other.denominator + other.numerator * denominator, denominator * other.denominator);
-        // Возвращаем новую дробь, полученную в результате сложения дробей
+        return Fraction(numerator * other.denominator + other.numerator * denominator,
+                        denominator * other.denominator);
     }
 
-    // Метод для вычитания целого числа из дроби
-    Fraction minus(int value) const {
-        return Fraction(numerator - value * denominator, denominator); 
-        // Возвращаем новую дробь после вычитания целого числа из числителя
+    // Метод для вычитания дробей
+    Fraction minus(const Fraction& other) const {
+        return Fraction(numerator * other.denominator - other.numerator * denominator,
+                        denominator * other.denominator);
     }
 
     // Метод для умножения дробей
     Fraction multiply(const Fraction& other) const {
         return Fraction(numerator * other.numerator, denominator * other.denominator);
-        // Возвращаем новую дробь, полученную в результате умножения дробей
     }
 
     // Метод для деления дробей
-    Fraction divide(const Fraction& other) const {
+    Fraction div(const Fraction& other) const {
+        if (other.numerator == 0) { // Проверка на деление на ноль
+            throw std::invalid_argument("Деление на ноль");
+        }
         return Fraction(numerator * other.denominator, denominator * other.numerator);
-        // Возвращаем новую дробь, полученную в результате деления дробей
+    }
+
+    // Метод для получения строкового представления дроби
+    std::string toString() const {
+        return std::to_string(numerator) + "/" + std::to_string(denominator); // Возвращаем строку в формате "числитель/знаменатель"
+    }
+};
+
+// Предварительное объявление класса Employee
+class Employee;
+
+// Класс для представления отдела
+class Department {
+private:
+    std::string title;   // Название отдела
+    Employee* manager;   // Указатель на менеджера отдела
+public:
+    // Конструктор класса Department
+    Department(const std::string& title, Employee* manager)
+        : title(title), manager(manager) {}
+
+    std::string getTitle() const { return title; }  // Метод для получения названия отдела
+    Employee* getManager() const { return manager; } // Метод для получения менеджера отдела
+    void setManager(Employee* newManager) { manager = newManager; } // Метод для установки нового менеджера
+};
+
+// Класс для представления сотрудника
+class Employee {
+private:
+    std::string name;      // Имя сотрудника
+    Department* department; // Указатель на отдел, в котором работает сотрудник
+public:
+    // Конструктор класса Employee
+    Employee(const std::string& name, Department* department)
+        : name(name), department(department) {}
+
+    std::string getName() const { return name; } // Метод для получения имени сотрудника
+
+    // Метод для получения строкового представления сотрудника
+    std::string toString() const {
+        if (department->getManager() == this) { // Если сотрудник является менеджером отдела
+            return name + " начальник отдела " + department->getTitle();
+        } else { // Если сотрудник не является менеджером
+            return name + " работает в отделе " + department->getTitle() +
+                   ", начальник которого " + department->getManager()->getName();
+        }
     }
 };
 
 int main() {
-    // Создание имен с использованием различных конструкторов класса Name
-    Name cleopatra("Клеопатра"); // Имя без фамилии и отчества
-    Name pushkin("Александр", "Сергеевич"); // Имя и фамилия без отчества
-    Name mayakovsky("Маяковский", "Владимир"); // Имя и фамилия без отчества
-    Name bonifatievich("Бонифатьевич", "Христофор"); // Имя и фамилия без отчества
+    // Работа с домами
+    House house1(1);  // Создаем дом с 1 этажом
+    House house2(5);  // Создаем дом с 5 этажами
+    House house3(23); // Создаем дом с 23 этажами
 
-    // Вывод имен на экран с использованием метода toString()
-    std::cout << cleopatra.toString() << std::endl;
-    std::cout << pushkin.toString() << std::endl;
-    std::cout << mayakovsky.toString() << std::endl;
-    std::cout << bonifatievich.toString() << std::endl;
+    std::cout << house1.toString() << std::endl; // Вывод информации о первом доме
+    std::cout << house2.toString() << std::endl; // Вывод информации о втором доме
+    std::cout << house3.toString() << std::endl; // Вывод информации о третьем доме
 
-    // Создание домов с различным количеством этажей с использованием класса House
-    House house1(1);  // Один этаж
-    House house2(5);  // Пять этажей
-    House house3(23); // Двадцать три этажа
+    // Работа с дробями
+    Fraction f1(1, 3);  // Создаем дробь 1/3
+    Fraction f2(2, 3);  // Создаем дробь 2/3
+    Fraction f3(1, 2);  // Создаем дробь 1/2
 
-    // Вывод информации о домах на экран с использованием метода toString()
-    std::cout << house1.toString() << std::endl;
-    std::cout << house2.toString() << std::endl;
-    std::cout << house3.toString() << std::endl;
+    // Пример сложения двух дробей
+    Fraction resultSum = f1.sum(f2); 
+    std::cout << f1.toString() << " + " << f2.toString() << " = " << resultSum.toString() << std::endl;
 
-    // Создание отдела IT и указание начальника отдела
-    Department it_department("IT", "Козлов");
+    // Пример вычитания двух дробей
+    Fraction resultMinus = f1.minus(f2);
+    std::cout << f1.toString() << " - " << f2.toString() << " = " << resultMinus.toString() << std::endl;
+
+    // Пример умножения двух дробей
+    Fraction resultMultiply = f1.multiply(f2); // Умножаем дроби f1 и f2
+    std::cout << f1.toString() << " * " << f2.toString() << " = " << resultMultiply.toString() << std::endl; // Выводим результат умножения
     
-    // Создание сотрудников и добавление их в отдел IT через конструктор Employee
-    Employee petrov(Name("Петров"), &it_department);
-    Employee kozlov(Name("Козлов"), &it_department);
-    Employee sidorov(Name("Сидоров"), &it_department);
-
-    // Вывод информации о каждом сотруднике на экран с использованием метода toString()
-    std::cout << petrov.toString() << std::endl;
-    std::cout << kozlov.toString() << std::endl;
-    std::cout << sidorov.toString() << std::endl;
-
-    // Вывод списка сотрудников отдела IT на экран с использованием метода listEmployees()
-    it_department.listEmployees();
-
-    // Примеры использования класса Fraction для работы с дробями
-    Fraction f1(1, 3);   // Первая дробь: 1/3
-    Fraction f2(2, 3);   // Вторая дробь: 2/3
-    Fraction f3(1, 2);   // Третья дробь: 1/2
-
-    // Примеры использования методов класса Fraction для выполнения операций над дробями
-    Fraction result1 = f1.multiply(f2);  // Умножение первой и второй дробей
-    Fraction result2 = f1.sum(f2).divide(f3).minus(5);  // Сложение двух дробей, деление на третью и вычитание целого числа
-        // Вывод результатов операций с дробями на экран с использованием метода toString()
-    std::cout << f1.toString() << " * " << f2.toString() << " = " << result1.toString() << std::endl;
-    std::cout << "Результат f1.sum(f2).divide(f3).minus(5): " << result2.toString() << std::endl;
-
+    // Пример деления двух дробей
+    Fraction resultDiv = f1.div(f2); // Делим дробь f1 на дробь f2
+    std::cout << f1.toString() << " / " << f2.toString() << " = " << resultDiv.toString() << std::endl; // Выводим результат деления
+    
+    // Вывод результата сложения и деления дробей с последующим вычитанием
+    Fraction five(5, 1); // Создаем дробь 5/1
+    Fraction resultComplex = f1.sum(f2).div(f3).minus(five); // Сначала складываем f1 и f2, затем делим на f3 и вычитаем 5
+    std::cout << "Результат f1.sum(f2).div(f3).minus(5): " << resultComplex.toString() << std::endl; // Выводим итоговый результат
+    
+    // Создаем отдел IT
+    Department itDepartment("IT", nullptr); // Инициализируем отдел IT без менеджера
+    
+    // Создаем сотрудников
+    Employee petrov("Петров", &itDepartment); // Создаем сотрудника Петрова в IT отделе
+    Employee kozlov("Козлов", &itDepartment); // Создаем сотрудника Козлова в IT отделе
+    Employee sidorov("Сидоров", &itDepartment); // Создаем сотрудника Сидорова в IT отделе
+    
+    // Назначаем Козлова начальником IT отдела
+    itDepartment.setManager(&kozlov); // Устанавливаем Козлова менеджером отдела IT
+    
+    // Выводим текстовое представление сотрудников
+    std::cout << petrov.toString() << std::endl; // Выводим информацию о Петрове
+    std::cout << kozlov.toString() << std::endl; // Выводим информацию о Козлове
+    std::cout << sidorov.toString() << std::endl; // Выводим информацию о Сидорове
+    
     return 0; // Завершение программы
 }
